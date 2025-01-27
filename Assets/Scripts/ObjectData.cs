@@ -1,33 +1,37 @@
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
 public class ObjectData : MonoBehaviour
 {
 	[Header("General Object Data")]
     public float mass;
-	public enum FrictionMode {Instant, Gradual}
-	public FrictionMode frictionType;
-	public bool keepControllerSize;
-
-    [HideInInspector] public Vector3 velocity;
-	public Vector3 deltaVelocity;
+	public enum MoveMode {Transform, RigidBody, CharacterController}
+	public MoveMode moveMode;
+	public bool interact = true;
+	public bool createConvexMesh = true;
+    public Vector3 velocity;
+	Vector3 deltaVelocity;
 	[HideInInspector] public float forceOfGravity;
 	[HideInInspector] public bool isInWater;
 
-	[HideInInspector] public CharacterController controller;
 	[HideInInspector] public GlobalData data;
+	[HideInInspector] Rigidbody body;
+	[HideInInspector] public CharacterController controller;
 
 	MeshRenderer[] renderers;
 
+
+
 	public void Start()
 	{
-		data = FindAnyObjectByType<GlobalData>();
-		controller = GetComponent<CharacterController>();
-		if (!keepControllerSize)
+		body = GetComponent<Rigidbody>();
+		if (body != null)
 		{
-			controller.radius = 0;
-			controller.height = 0.01f;
+			body.useGravity = false;
+			body.isKinematic = true;
 		}
+		controller = GetComponent<CharacterController>();
+
+		data = FindAnyObjectByType<GlobalData>();
 
 		renderers = GetComponentsInChildren<MeshRenderer>();
 		for (int i = 0; i < renderers.Length; i++)
@@ -40,6 +44,13 @@ public class ObjectData : MonoBehaviour
 			}
 			addedMaterials[renderMaterials.Length] = data.nullMaterial;
 			renderers[i].materials = addedMaterials;
+		}
+
+		if (createConvexMesh)
+		{
+			MeshCollider trigerCollider = gameObject.AddComponent<MeshCollider>();
+			trigerCollider.convex = true;
+			trigerCollider.isTrigger = true;
 		}
 	}
 
@@ -67,22 +78,35 @@ public class ObjectData : MonoBehaviour
 
 	public void Update()
 	{
-		if (frictionType == FrictionMode.Gradual)
-		{
-			velocity -= velocity * data.friction * Time.deltaTime;
-		}
+		velocity -= velocity * data.friction * Time.deltaTime;
 
 		Vector3 velocityLastFrame = velocity;
-		if (!controller.isGrounded)
+		forceOfGravity = data.gravity * mass * Time.deltaTime;
+		velocity += Vector3.down * forceOfGravity;
+
+		if (moveMode == MoveMode.Transform)
 		{
-			forceOfGravity = data.gravity * mass * Time.deltaTime;
-			velocity += Vector3.down * forceOfGravity;
+			transform.Translate(velocity * Time.deltaTime, Space.World);
 		}
-		
-		controller.Move(velocity * Time.deltaTime);
-		
+		else if (moveMode == MoveMode.RigidBody)
+		{
+			body.MovePosition(transform.position + velocity * Time.deltaTime);
+		}
+		else if (moveMode == MoveMode.CharacterController)
+		{
+			controller.Move(velocity * Time.deltaTime);
+		}
 		deltaVelocity = velocity - velocityLastFrame;
 	}
 
-
+	private void OnTriggerEnter(Collider other)
+	{
+		ObjectData obj = other.gameObject.GetComponent<ObjectData>();
+		if (obj == null) return;
+		if (!obj.interact) return;
+		print(name + " velocity " + velocity.ToString());
+		velocity += obj.velocity * 0.5f;
+		obj.velocity = -obj.velocity * 0.5f;
+		print(name + " velocity " + velocity.ToString());
+	}
 }

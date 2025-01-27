@@ -6,4 +6,11 @@ public class GlobalData : MonoBehaviour
     public float friction;
     public Material outlineMaterial;
     public Material nullMaterial;
+    public GameObject water;
+    public Transform target;
+
+	private void Update()
+	{
+        water.transform.position = new Vector3(target.position.x, 0, transform.position.z);
+	}
 }
