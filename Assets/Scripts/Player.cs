@@ -39,7 +39,7 @@ public class Player : ObjectData
 		{
 			if (isJumping)
 			{
-				velocity.y += jumpHeight;
+				velocity.y = jumpHeight;
 			}
 			currentSpeed = speed;
 		}
@@ -74,7 +74,7 @@ public class Player : ObjectData
 		if (lastSelectedObject != null)
 		{
 			lastSelectedObject.UnOutline();
-			lastSelectedId = lastInteractable.GetInstanceID();
+			lastSelectedId = lastSelectedObject.GetInstanceID();
 		}
 		lastSelectedObject = null;
 

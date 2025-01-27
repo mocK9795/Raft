@@ -11,6 +11,6 @@ public class GlobalData : MonoBehaviour
 
 	private void Update()
 	{
-        water.transform.position = new Vector3(target.position.x, 0, transform.position.z);
+        water.transform.position = new Vector3(target.position.x, 0, target.position.z);
 	}
 }

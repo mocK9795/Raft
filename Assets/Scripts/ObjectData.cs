@@ -52,6 +52,8 @@ public class ObjectData : MonoBehaviour
 			trigerCollider.convex = true;
 			trigerCollider.isTrigger = true;
 		}
+
+		velocity += Vector3.down;
 	}
 
 	public void Outline()
@@ -97,6 +99,11 @@ public class ObjectData : MonoBehaviour
 			controller.Move(velocity * Time.deltaTime);
 		}
 		deltaVelocity = velocity - velocityLastFrame;
+
+		if (transform.position.y < -100)
+		{
+			Destroy(gameObject);
+		}
 	}
 
 	private void OnTriggerEnter(Collider other)
@@ -104,9 +111,7 @@ public class ObjectData : MonoBehaviour
 		ObjectData obj = other.gameObject.GetComponent<ObjectData>();
 		if (obj == null) return;
 		if (!obj.interact) return;
-		print(name + " velocity " + velocity.ToString());
 		velocity += obj.velocity * 0.5f;
 		obj.velocity = -obj.velocity * 0.5f;
-		print(name + " velocity " + velocity.ToString());
 	}
 }
